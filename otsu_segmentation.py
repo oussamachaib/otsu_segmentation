@@ -4,25 +4,47 @@ import cv2
 
 
 def otsu(img):
-    img = 255*(img/np.max(img))
-    img = img.astype(np.uint8)
+    """
+    Otsu segmentation algorithm.
+
+    Returns an integer between 0 and 255, corresponding to the optimal binarization threshold
+    maximizing the inter-class variance between foreground and background pixels
+
+    Parameters
+    ----------
+    img : np.ndarray
+        Input image
+
+    Returns
+    _______
+    otsu_threshold: int
+        Otsu threshold
+
+    """
+
+    # Converting input arrays to an np.uint8 single-channel array
+    X = 255*(img/np.max(img))
+    X = X.astype(np.uint8)
 
     var = np.zeros(256)
     
-    # Using the inter-class variance (first statistical moments only)
-    for i in np.arange(1,255,1):
+    # Computing the inter-class variance (note this is easier than computing the intra-class variance
+    # as it only requires first-order moments -- the final result should however be identical)
+    for i in np.arange(256):
         # Thresholding the image using grayscale value i
-        binarized_image = img>i
-        # Computing conditional statistics
-        cdf_foreground = np.sum(binarized_image)/np.size(img)
-        cdf_background = 1-cdf_foreground
-        mean_foreground = (np.mean(img[binarized_image == 1]))
-        mean_background = (np.mean(img[binarized_image == 0]))
+        isForeground = X>=i
+        # Conditional statistics
+        P_foreground = np.sum(isForeground)/np.size(X)
+        mu_foreground = 0
+        mu_background = 0
+        if sum(isForeground.ravel())>0: # Preventing operations on empty arrays
+            mu_foreground = X[isForeground == 1].mean()
+        if sum(isForeground.ravel())<np.size(X):  # Preventing operations on empty arrays
+            mu_background = X[isForeground == 0].mean()
         # Computing the intra-class variance
-        var[i] =  cdf_background*cdf_foreground*(mean_background-mean_foreground)**2
-    
-    
-    # Determining the Otsu threshold (the last element is discarded due to empty foreground array)
-    otsu_threshold = int(np.nanargmax(var[0:-2]))
+        var[i] = P_foreground*(1-P_foreground)*(mu_background-mu_foreground)**2
+
+    # Determining the Otsu threshold
+    otsu_threshold = int(np.nanargmax(var))-1
 
     return otsu_threshold
