@@ -7,16 +7,6 @@ class otsu:
     Computes the optimal binarization threshold (an integer between 0 and 255) from a 2D array.
     The returned integer is the threshold maximizing (minimizing) the inter-class (intra-class) variance.
 
-    Parameters
-    ----------
-    img : np.ndarray
-        Input image
-
-    Returns
-    _______
-    otsu_threshold: int
-        Otsu threshold
-
     """
     def __init__(self):
         self.threshold = None
@@ -24,14 +14,37 @@ class otsu:
         self.scan = None
 
     def _rescale(self, X):
-        # Rescaling input arrays to an np.uint8 single-channel array with values between 0 and 2^8 (= 256)
+        '''
+        (Internal function) Rescaling input arrays to a uint8 single-channel array with values between 0 and 255
+
+        Parameters
+        ----------
+        X: Image (nd.array, uint8 elements)
+
+        Returns
+        -------
+        <.>: Rescaled image (nd.array, uint8 elements)
+
+        '''
+        #
         if X.dtype == 'nd.array':
             return (255 * X/X.max()).astype(np.uint8)
         else:
             return X
 
     def _sigma(self, X):
-        # Computing the argmax of the inter-class variance
+        '''
+        (Internal function) Computes the inter-class variance for each grayscale intensity (0-255)
+
+        Parameters
+        ----------
+        X: Image (nd.array, uint8 elements)
+
+        Returns
+        -------
+        var_i : Array of inter-class variances (float)
+
+        '''
         # Note: This is equivalent to the argmin of the intra-class variance in the binary context but is more efficient given it only needs first moments (means)
 
         # Initialize array of variances
@@ -61,6 +74,18 @@ class otsu:
         return var_i
 
     def fit(self, X):
+        '''
+        Runs the Otsu segmentation algorithm and computes the optimal threshold.
+
+        Parameters
+        ----------
+        X: Image (nd.array, uint8 elements)
+
+        Returns
+        -------
+        None
+
+        '''
         # Computing the Otsu threshold
 
         # Computing discriminant criterion for each grayscale value
@@ -72,8 +97,19 @@ class otsu:
         self.threshold = np.argmax(var_i) # Optimal threshold
 
     def predict(self, X):
-        # Computing the binary image
-        return (X >= self.threshold).astype(int)
+        '''
+        Binarizes the image based on pre-computed Otsu threshold. Must be run after fitting the model.
+
+        Parameters
+        ----------
+        X: Image (nd.array, uint8 elements)
+
+        Returns
+        -------
+        <.>: Binarized image (nd.array, bool elements)
+
+        '''
+        return  y = (X >= self.threshold).astype(int)
 
 
 
