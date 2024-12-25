@@ -34,9 +34,6 @@ class otsu:
         # Computing the argmax of the inter-class variance
         # Note: This is equivalent to the argmin of the intra-class variance in the binary context but is more efficient given it only needs first moments (means)
 
-        # One-dimensonalize image array
-        # X = (X.flatten()).astype(float)
-
         # Initialize array of variances
         var_i = np.zeros(256)
 
