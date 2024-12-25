@@ -79,24 +79,6 @@ class otsu:
         return (X >= self.threshold).astype(int)
 
 
-#%% Debugging snippet
-#
-# import numpy as np
-# import matplotlib.pyplot as plt
-
-# img_id = 2
-
-# img = cv2.imread(f"demo_images/demo{img_id}.png",cv2.IMREAD_GRAYSCALE)
-#
-# model = otsu()
-# model.fit(img)
-# I = model.predict(img)
-# plt.figure()
-# plt.imshow(I, vmin = 0, vmax = .8, cmap = 'gray')
-# plt.imshow(model.perimeter(I), vmin = 0, vmax = 1, cmap = 'gray', alpha = .5)
-# plt.show()
-
-
 
 
 
