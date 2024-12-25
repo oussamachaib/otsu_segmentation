@@ -20,8 +20,8 @@ rad.json
 *.flf
 #Test results file
 TestResults.xml
-.obsidian
-.idea
+.obsidian/
+.idea/
 
 __pycache__
 .DS_Store
