@@ -1,14 +1,11 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import cv2
 
-
-def otsu(img):
+class otsu:
     """
     Otsu segmentation algorithm.
 
-    Returns an integer between 0 and 255, corresponding to the optimal binarization threshold
-    maximizing the inter-class variance between foreground and background pixels
+    Computes the optimal binarization threshold (an integer between 0 and 255) from a 2D array.
+    The returned integer is the threshold maximizing (minimizing) the inter-class (intra-class) variance.
 
     Parameters
     ----------
@@ -21,30 +18,90 @@ def otsu(img):
         Otsu threshold
 
     """
+    def __init__(self):
+        self.threshold = None
+        self.var = None
+        self.scan = None
 
-    # Converting input arrays to an np.uint8 single-channel array
-    X = 255*(img/np.max(img))
-    X = X.astype(np.uint8)
+    def _rescale(self, X):
+        # Rescaling input arrays to an np.uint8 single-channel array with values between 0 and 2^8 (= 256)
+        if X.dtype == 'nd.array':
+            return (255 * X/X.max()).astype(np.uint8)
+        else:
+            return X
 
-    var = np.zeros(256)
-    
-    # Computing the inter-class variance (note this is easier than computing the intra-class variance
-    # as it only requires first-order moments -- the final result should however be identical)
-    for i in np.arange(256):
-        # Thresholding the image using grayscale value i
-        isForeground = X>=i
-        # Conditional statistics
-        P_foreground = np.sum(isForeground)/np.size(X)
-        mu_foreground = 0
-        mu_background = 0
-        if sum(isForeground.ravel())>0: # Preventing operations on empty arrays
-            mu_foreground = X[isForeground == 1].mean()
-        if sum(isForeground.ravel())<np.size(X):  # Preventing operations on empty arrays
-            mu_background = X[isForeground == 0].mean()
-        # Computing the intra-class variance
-        var[i] = P_foreground*(1-P_foreground)*(mu_background-mu_foreground)**2
+    def _sigma(self, X):
+        # Computing the argmax of the inter-class variance
+        # Note: This is equivalent to the argmin of the intra-class variance in the binary context but is more efficient given it only needs first moments (means)
 
-    # Determining the Otsu threshold
-    otsu_threshold = int(np.nanargmax(var))-1
+        # One-dimensonalize image array
+        # X = (X.flatten()).astype(float)
 
-    return otsu_threshold
+        # Initialize array of variances
+        var_i = np.zeros(256)
+
+        # Scanning full 8-bit range (0-255) for potential thresholds
+        for i in np.arange(255):
+            # Thresholding the image using grayscale value "i" -- strict inequality as per Otsu 1979
+            isForeground = (X > i)
+
+            # Class probabilities
+            omega1 = np.sum(isForeground)/np.size(X)
+
+            if omega1 == 0:
+                mu_foreground = 0
+                mu_background = X.mean()
+            elif omega1 == 1:
+                mu_foreground = X.mean()
+                mu_background = 0
+            else:
+                mu_foreground = X[isForeground].mean()
+                mu_background = X[isForeground == False].mean()
+
+            # Computing the inter-class variance
+            var_i[i] = (1-omega1) * (omega1) * (mu_background - mu_foreground) ** 2
+
+        return var_i
+
+    def fit(self, X):
+        # Computing the Otsu threshold
+
+        # Computing discriminant criterion for each grayscale value
+        var_i = self._sigma(self._rescale(X))
+
+        # Saving attributes
+        self.scan = {'i': np.arange(256), 'var_i': var_i} # Individual thresholds
+        self.var = np.max(var_i) # Intra-class variance
+        self.threshold = np.argmax(var_i) # Optimal threshold
+
+    def predict(self, X):
+        # Computing the binary image
+        return (X >= self.threshold).astype(int)
+
+
+#%% Debugging snippet
+#
+# import numpy as np
+# import matplotlib.pyplot as plt
+
+# img_id = 2
+
+# img = cv2.imread(f"demo_images/demo{img_id}.png",cv2.IMREAD_GRAYSCALE)
+#
+# model = otsu()
+# model.fit(img)
+# I = model.predict(img)
+# plt.figure()
+# plt.imshow(I, vmin = 0, vmax = .8, cmap = 'gray')
+# plt.imshow(model.perimeter(I), vmin = 0, vmax = 1, cmap = 'gray', alpha = .5)
+# plt.show()
+
+
+
+
+
+
+
+
+
+
