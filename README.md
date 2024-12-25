@@ -9,4 +9,5 @@
 ##### Contents
 ---------------
 ```otsu_segmentation.py```: Python implementation of the original algorithm.
+
 ```demo.ipynb```: A demonstration and comparison against two state-of-the-art-algorithm.
